@@ -2,8 +2,8 @@ name: Ejecutar actualización diaria de históricos
 
 on:
   schedule:
-    - cron: "0 3 * * *"  
-  workflow_dispatch:     
+    - cron: "0 3 * * *" 
+  workflow_dispatch:      
 
 jobs:
   actualizar-historicos:
@@ -14,10 +14,15 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
 
+      - name: Mostrar contenido del repositorio (debug)
+        run: |
+          echo "📂 Contenido actual:"
+          ls -R
+
       - name: Configurar entorno Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11" 
+          python-version: "3.11"
 
       - name: Instalar dependencias
         run: |
@@ -28,6 +33,8 @@ jobs:
         run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
 
       - name: Ejecutar script de actualización
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python main.py
 
       - name: Guardar logs en caso de error
@@ -36,6 +43,7 @@ jobs:
           mkdir -p logs
           dmesg | tail -n 200 > logs/error.log
         continue-on-error: true
+
       - name: Subir logs como artefacto
         if: failure()
         uses: actions/upload-artifact@v4
